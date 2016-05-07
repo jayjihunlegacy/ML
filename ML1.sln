@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.25123.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "ML1", "ML1\ML1.pyproj", "{48089F2A-135E-47DE-973D-CE0243D24F79}"
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "MNIST_Numbers", "ML1\MNIST_Numbers.pyproj", "{48089F2A-135E-47DE-973D-CE0243D24F79}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
