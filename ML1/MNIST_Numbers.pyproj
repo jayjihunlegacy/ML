@@ -30,6 +30,9 @@
     <Compile Include="HeatMap.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="MultiLayerPerceptron.py">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Content Include="mnist.pkl.gz" />
