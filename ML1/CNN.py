@@ -40,4 +40,19 @@ f =theano.function([input], output)
 import pylab
 from PIL import Image
 
-img = Image.open(open('doc/
+fileName='C:/Users/Jihun/Desktop/Lena.jpg'
+
+img = Image.open(open(fileName,'rb'))
+img = numpy.asarray(img, dtype='float32')/256
+
+
+img_ = img.transpose(2,0,1).reshape(1,3,512,512)
+
+filtered_img = f(img_)
+
+pylab.subplot(1,3,1); pylab.axis('off'); pylab.imshow(img)
+pylab.gray()
+
+pylab.subplot(1,3,2); pylab.axis('off'); pylab.imshow(filtered_img[0,0,:,:])
+pylab.subplot(1,3,3); pylab.axis('off'); pylab.imshow(filtered_img[0,1,:,:])
+pylab.show()
