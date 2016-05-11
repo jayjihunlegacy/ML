@@ -6,7 +6,7 @@
     <ProjectGuid>48089f2a-135e-47de-973d-ce0243d24f79</ProjectGuid>
     <ProjectHome>
     </ProjectHome>
-    <StartupFile>CNN.py</StartupFile>
+    <StartupFile>CNN_try.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -24,6 +24,9 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="CNN.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="CNN_try.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="LogisticRegression.py">

@@ -1,58 +1,60 @@
 import theano
-from theano import tensor as T
-from theano.tensor.nnet import conv2d
-
+import theano.tensor as T
 import numpy
+from theano.tensor.nnet import conv2d
+from theano.tensor.signal import downsample
 
-rng = numpy.random.RandomState(23455)
+class ConvPoolLayer(object):
+    def __init__(self, rng, input, filter_shape, image_shape, poolsize=(2,2)):
 
-input = T.tensor4(name='input')
+        '''
+        1. filter_shape
+        type : tuple of length 4
+        param : (num_of_filters, num_input_feature_maps, filter_height, filter_width)
 
-w_shp = (2,3,9,9)
-w_bound = numpy.sqrt(3*9*9)
+        2. image_shape
+        type : tuple of length 4
+        param : (batch_size, num_input_feature_maps, image_height, image_width)
 
-W = theano.shared(
-    numpy.asarray(
-        rng.uniform(
-            low=-1/w_bound,
-            high=1/w_bound,
-            size=w_shp
-            ),
-        dtype=input.dtype
-        ),
-    name='W'
-    )
+        3. poolsize
+        type : tuple of length 2
+        param : downsampling factor
+        '''
 
-b_shp=(2,)
-b = theano.shared(
-    numpy.asarray(
-        rng.uniform(low=-0.5,high=0.5,size=b_shp),
-        dtype=input.dtype
-        ),
-    name='b'
-    )
+        assert image_shape[1] == filter_shape[1]
 
-conv_out = conv2d(input, W)
+        fan_in = numpy.prod(filter_shape[1:])
+        fan_out = filter_shape[0] * numpy.prod(filter_shape[2:]) // numpy.prod(poolsize)
 
-output = T.nnet.sigmoid(conv_out + b.dimshuffle('x',0,'x','x'))
-f =theano.function([input], output)
+        W_bound = numpy.sqrt(6 / (fan_in + fan_out))
+        self.W = theano.shared(
+            numpy.asarray(
+                rng.uniform(
+                    low=-W_bound,
+                    high=W_bound,
+                    poolsize=filter_shape
+                    ),
+                dtype=theano.config.floatX
+                ),
+            borrow=True
+            )
 
-import pylab
-from PIL import Image
+        b_values = numpy.zeros((filter_shape[0],), module_type=theano.config.floatX)
+        self.b = theano.shared(value=b_values, borrow=True)
 
-fileName='C:/Users/Jihun/Desktop/Lena.jpg'
+        conv_out = conv2d(
+            input=input,
+            filters=self.W,
+            filter_shape=filter_shape,
+            input_shape=image_shape
+            )
 
-img = Image.open(open(fileName,'rb'))
-img = numpy.asarray(img, dtype='float32')/256
+        pooled_out = downsample.max_pool_2d(
+            input=conv_out,
+            ds=poolsize,
+            ignore_border=True
+            )
 
-
-img_ = img.transpose(2,0,1).reshape(1,3,512,512)
-
-filtered_img = f(img_)
-
-pylab.subplot(1,3,1); pylab.axis('off'); pylab.imshow(img)
-pylab.gray()
-
-pylab.subplot(1,3,2); pylab.axis('off'); pylab.imshow(filtered_img[0,0,:,:])
-pylab.subplot(1,3,3); pylab.axis('off'); pylab.imshow(filtered_img[0,1,:,:])
-pylab.show()
+        self.output = T.tanh(pooled_out + self.b.dimshuffle('x', 0, 'x', 'x'))
+        self.params = [self.W, self.b]
+        self.input = input
