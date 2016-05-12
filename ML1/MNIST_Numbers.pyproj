@@ -6,7 +6,7 @@
     <ProjectGuid>48089f2a-135e-47de-973d-ce0243d24f79</ProjectGuid>
     <ProjectHome>
     </ProjectHome>
-    <StartupFile>CNN_try.py</StartupFile>
+    <StartupFile>Main.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
