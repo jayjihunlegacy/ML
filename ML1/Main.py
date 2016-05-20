@@ -390,8 +390,8 @@ def cnn_mnist(dataset):
 def main():
     dataset = get_mnist();
     #sgd_optimization_mnist(dataset)
-    #mlp_mnist(dataset)
-    cnn_mnist(dataset)
+    mlp_mnist(dataset)
+    #cnn_mnist(dataset)
 
    
 
