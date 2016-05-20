@@ -1,4 +1,4 @@
-import pickle, gzip, numpy
+﻿import pickle, gzip, numpy
 import theano
 import theano.tensor as T
 import LogisticRegression
@@ -20,7 +20,6 @@ def get_mnist():
         u.encoding = 'latin1'
         train_set, valid_set, test_set = u.load()
         f.close()
-
 
     train_set_x, train_set_y = shared_dataset(train_set)
     valid_set_x, valid_set_y = shared_dataset(valid_set)
@@ -171,7 +170,7 @@ def mlp_mnist(dataset):
             y: test_set_y[index * batch_size : (index+1) * batch_size]
             }
         )
-
+    print('Test built.')
     validate_model = theano.function(
         inputs=[index],
         outputs=classifier.errors(y),
@@ -185,7 +184,7 @@ def mlp_mnist(dataset):
 
     updates = [(param, param - learning_rate * gparam)
                for param,gparam in zip(classifier.params,gparams)]
-
+    print('Valid built.')
     train_model = theano.function(
         inputs=[index],
         outputs=cost,
@@ -195,7 +194,7 @@ def mlp_mnist(dataset):
             y: train_set_y[index * batch_size : (index+1) * batch_size]
             }
         )
-
+    print('Train built.')
     print('training model...')
     patience = 10000
     patience_increase = 2
@@ -245,12 +244,12 @@ def mlp_mnist(dataset):
     print('The code run for %d epochs, with %f epochs/sec' %(epoch, epoch/(end_time-start_time)))
 
 def cnn_mnist(dataset):
-    learning_rate = 0.01
+    learning_rate = 0.1
     n_epochs = 200
     batch_size = 500
 
     #nkerns : number of kernels on each layer
-    nkerns = [20,50]
+    nkerns = [20,10]
 
 
     train_set_x, train_set_y = dataset[0]
@@ -265,7 +264,7 @@ def cnn_mnist(dataset):
     x = T.matrix('x')
     y = T.ivector('y')
 
-    print('... building the model')
+    print('Building the model...')
 
     layer0_input = x.reshape((batch_size, 1, 28, 28))
 
@@ -291,11 +290,11 @@ def cnn_mnist(dataset):
         rng,
         input=layer2_input,
         n_in=nkerns[1]*4*4,
-        n_out=500,
+        n_out=80,
         activation=T.tanh
         )
 
-    layer3 = LogisticRegression.LogisticRegression(input=layer2.output, n_in=500, n_out=10)
+    layer3 = LogisticRegression.LogisticRegression(input=layer2.output, n_in=80, n_out=10)
 
     cost = layer3.NLL(y);
 
@@ -307,7 +306,7 @@ def cnn_mnist(dataset):
             y : test_set_y[index * batch_size : (index+1) * batch_size]
             }
         )
-
+    print('1. Test built.')
     validate_model = theano.function(
         [index],
         layer3.errors(y),
@@ -316,13 +315,13 @@ def cnn_mnist(dataset):
             y : valid_set_y[index * batch_size : (index+1) * batch_size]
             }
         )
-
+    print('2. Valid built.')
     params = layer3.params + layer2.params + layer1.params + layer0.params
 
     grads = T.grad(cost,params)
 
     updates = [(param_i, param_i - learning_rate * grad_i) for param_i, grad_i in zip(params, grads)]
-
+    print('3. Derivative calculated.')
     train_model = theano.function(
         [index],
         cost,
@@ -332,8 +331,8 @@ def cnn_mnist(dataset):
             y : train_set_y[index * batch_size : (index+1) * batch_size]
             }
         )
-
-    print('... train model')
+    print('4. Train built.')
+    print('Train model...')
     patience = 10000
     patience_increase = 2
     improvement_threshold = 0.995
@@ -353,14 +352,14 @@ def cnn_mnist(dataset):
         for minibatch_index in range(n_train_batches):
             iter = (epoch - 1) * n_train_batches + minibatch_index
 
-            #if iter % 100 == 0:
-            print('training @ iter = ',iter)
+ #           if iter % 100 == 0:
+ #               print('training @ iter = ',iter)
             cost_ij = train_model(minibatch_index)
 
             if(iter+1)%validation_frequency == 0:
                 validation_losses = [validate_model(i) for i in range(n_valid_batches)]
                 this_validation_loss = numpy.mean(validation_losses)
-                print('epoch %i, minibatch %i/%i, validation error %f %%'%(epoch, minibatch_index+1, n_train_batches, this_validation_loss*100))
+                print('epoch %i, minibatch %i/%i, validation error %.2f %%'%(epoch, minibatch_index+1, n_train_batches, this_validation_loss*100))
 
                 if this_validation_loss < best_validation_loss:
                     if this_validation_loss < best_validation_loss*improvement_threshold:
@@ -372,7 +371,7 @@ def cnn_mnist(dataset):
                     test_losses = [test_model(i) for i in range(n_test_batches)]
                     test_score = numpy.mean(test_losses)
 
-                    print('\tepoch %i, minibatch %i/%i, test error of best model %f %%'%(epoch, minibatch_index+1, n_train_batches, test_score*100))
+                    print('\tepoch %i, minibatch %i/%i, test error of best model %.2f %%'%(epoch, minibatch_index+1, n_train_batches, test_score*100))
 
             if patience <= iter:
                 done_looping = True
@@ -380,7 +379,7 @@ def cnn_mnist(dataset):
 
     end_time = timeit.default_timer()
     print('Optimization complete')
-    print('Best validation score of %f %% obtained at iteration %i, with test performance %f %%'%(best_validation_loss*100, best_iter+1, test_score*100))
+    print('Best validation score of %f %% obtained at iteration %i, with test performance %.2f %%'%(best_validation_loss*100, best_iter+1, test_score*100))
 
 
 
