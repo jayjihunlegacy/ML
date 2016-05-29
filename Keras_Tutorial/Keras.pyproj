@@ -4,13 +4,14 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>ad90f897-fdba-4cfd-8c24-f8ea3ab5a3d6</ProjectGuid>
-    <ProjectHome>.</ProjectHome>
-    <StartupFile>CIFAR_CNN.py</StartupFile>
+    <ProjectHome>
+    </ProjectHome>
+    <StartupFile>MNIST_Embedded.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
-    <Name>Keras_Tutorial</Name>
+    <Name>Keras</Name>
     <RootNamespace>Keras_Tutorial</RootNamespace>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -32,6 +33,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="MNIST_CNN.py" />
+    <Compile Include="MNIST_Embedded.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="MNIST_MLP.py">
       <SubType>Code</SubType>
     </Compile>

@@ -18,7 +18,7 @@ class SGDLearner(object):
         self.compile_model()
        
     def compile_model(self,learning_rate=0.1):
-        sgd=SGD(lr=learning_rate,momentum=0.9)
+        sgd=SGD(lr=learning_rate)#,momentum=0.9)
         self.model.compile(loss='categorical_crossentropy',
                       optimizer=sgd,
                       metrics=['accuracy'])
@@ -39,7 +39,7 @@ class SGDLearner(object):
         print('\t\t<Start with Valid Accuracy : %.2f%%>'%(score[1]*100,))
 
 
-        lr_candidates=[0.2,0.1,0.05,0.01,0.005,0.001,0.0005,0.0001]
+        lr_candidates=[0.2,0.1,0.05,0.01,0.005,0.001,0.0005,0.0001, 0.00005, 0.00001]
         epochs_candidates=[2,3,4,5,7,10,20,50,100]
 
         best_acc=0
@@ -55,7 +55,7 @@ class SGDLearner(object):
 
         for lr in lr_candidates:
             for n_epoch in epochs_candidates:      
-                print('Learning rate : %.4f, n_epoch : %i'%(lr,n_epoch))
+                print('Learning rate : %.6f, n_epoch : %i'%(lr,n_epoch))
                 '''
                 1. run for (lr,n_epoch).
                 2. observe the result, and see if E_train flips > 0 or E_valid flips > 1.
