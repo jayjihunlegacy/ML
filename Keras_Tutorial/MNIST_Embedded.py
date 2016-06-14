@@ -8,6 +8,7 @@ from keras.layers import Convolution2D, MaxPooling2D
 from keras.layers.advanced_activations import LeakyReLU
 from MNIST import *
 from Learner import SGDLearner
+from keras import backend as K
 import numpy
 
 class CNN_MNIST2(SGDLearner):
@@ -20,18 +21,19 @@ class CNN_MNIST2(SGDLearner):
 		self.model = Sequential()
 
 		self.model.add(Convolution2D(5,5,5,input_shape=(1,28,28)))
-		self.model.add(MaxPooling2D(pool_size=(2,2)))
+		self.model.add(MaxPooling2D(pool_size=(2,2), strides=(2,2)))
 
-		self.model.add(Convolution2D(5,5,5))
-		self.model.add(MaxPooling2D(pool_size=(2,2)))
+		self.model.add(Convolution2D(5,5,5,input_shape=(5,12,12)))
+		self.model.add(MaxPooling2D(pool_size=(2,2), strides=(2,2)))
+		print(self.model.output_shape)
 		self.model.add(Flatten())
-
+		print(self.model.output_shape)
 		self.model.add(Dense(40))
 		self.model.add(Activation('tanh'))
+		print(self.model.output_shape)
 		self.model.add(Dense(10))
 		self.model.add(Activation('softmax'))
-
-
+		print(self.model.output_shape)
 
 	def initialize_dataset(self):
 		dataset=get_mnist()
@@ -51,6 +53,12 @@ class CNN_MNIST2(SGDLearner):
 		self.train_y = np_utils.to_categorical(self.train_y,10)
 		self.valid_y = np_utils.to_categorical(self.valid_y,10)
 		self.test_y = np_utils.to_categorical(self.test_y,10)
+
+		self.train_y=self.test_y
+		self.valid_y = self.test_y
+
+		self.train_x = self.test_x
+		self.valid_x = self.test_x
 		
 	def importX(self):
 		feat_num=784
@@ -108,8 +116,15 @@ class CNN_MNIST2(SGDLearner):
 
 def export_weights(weights):
 
-	folder = 'C:/Users/Jihun/Desktop/Embedded/data/'
-	filenames = ['weights_conv1.h', 'bias_conv1.h', 'weights_conv2.h', 'bias_conv2.h', 'weights_ip1.h', 'bias_ip1.h', 'weights_ip2.h', 'bias_ip2.h']
+	folder = r'C:\Users\Jihun\Documents\Visual Studio 2013\Projects\Embedded\Embedded\data/'
+	filenames = ['weights_conv1.h',
+			  'bias_conv1.h',
+			  'weights_conv2.h',
+			  'bias_conv2.h',
+			  'weights_ip1.h',
+			  'bias_ip1.h',
+			  'weights_ip2.h',
+			  'bias_ip2.h']
 
 	for i in range(8):
 		weight = weights[i]
@@ -120,28 +135,75 @@ def export_weights(weights):
 			firstline = f.readline()
 		firstline = firstline.strip()
 
-		flat = weight.flatten()
+		if i==0 or i==2:
+			shape = weight.shape
+			flat=[]
+			for output in range(shape[0]):
+				for input in range(shape[1]):
+					one_kernel = weight[output][input]
+					print(one_kernel)
+					flat1 = list(one_kernel.flatten('C'))
+					flat1.reverse()
+					flat+=flat1
+
+		elif i==4 or i==6:
+			flat = list(weight.flatten('F'))
+		else:
+			flat = list(weight.flatten('C'))
+		print(len(flat))
+		'''
+		print(i)
+		print(flat[0:5])
+		print(flat[-5:])
+		print();print()
+		'''
 
 		with open(full, 'w') as f:
 			f.write(firstline+'\n')
-			for values in flat:
+			for values in flat[:-1]:
 				f.write(str(values))
 				f.write(',\n')
-			f.write('};')
+			f.write(str(flat[-1]))
+			f.write('\n};')
+	print('Weights exported.')
 
+def printing(model):
+	print(weights[0])
+	get_1rd_layer_output = K.function([model.layers[0].input],[model.layers[0].output])
+	get_3rd_layer_output = K.function([model.layers[0].input],[model.layers[1].output])
+	X=classifier.test_x[0].reshape((1,1,28,28))
+	layer_output1 = get_1rd_layer_output([X])[0]
+	layer_output2 = get_3rd_layer_output([X])[0]
+	layer_output=[X,layer_output1,layer_output2]
+	for layer in layer_output:
+		features = layer[0]
+		print("NEW LAYER")
+		for feature in features:
+			for row in feature:
+				for value in row:
+					print('%.3f\t'%(value,),end='')
+				print()
+			print()
+			print()
+		print()
 
 
 def main():
 	classifier = CNN_MNIST2(load_weight=True,manual_lr=0.000001)
 	#weights=classifier.model.get_weights()
+	#model =classifier.model
+	#printing(model)
+	#for parameter in weights:
+	#	print("WOW~!")
+	#	print(parameter)
 	#for parameter in weights:
 	#	print(parameter.shape)
 	#export_weights(weights)
 	#classifier.do()
 	
-
-	classifier.get_Etest()
-	#classifier.smart_run()
+	classifier.smart_run()
+	#classifier.get_Etest()
+	
 
 if __name__=='__main__':
 	print('Start Program!')

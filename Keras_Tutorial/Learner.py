@@ -30,7 +30,7 @@ class SGDLearner(object):
         self.compile_model(learning_rate)
 
         result=self.model.fit(self.train_x, self.train_y,
-                         nb_epoch=n_epoch, batch_size=32,verbose=2,
+                         nb_epoch=n_epoch, batch_size=10,verbose=2,
                          validation_data=(self.valid_x, self.valid_y))
         return result.history
 
@@ -51,8 +51,7 @@ class SGDLearner(object):
                 lr_candidates=lr_candidates[lr_candidates.index(self.manual_lr):]
             else:
                 lr_candidates=[self.manual_lr,] * 10
-
-
+                
         for lr in lr_candidates:
             for n_epoch in epochs_candidates:      
                 print('Learning rate : %.6f, n_epoch : %i'%(lr,n_epoch))
