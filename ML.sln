@@ -7,6 +7,8 @@ Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "MNIST_Numbers", "ML1\MNIST_
 EndProject
 Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "Keras", "Keras_Tutorial\Keras.pyproj", "{AD90F897-FDBA-4CFD-8C24-F8EA3AB5A3D6}"
 EndProject
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "Recurrents", "Recurrents\Recurrents.pyproj", "{061D95A8-E50B-4E5A-9103-A3437CEC18DE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -17,6 +19,8 @@ Global
 		{48089F2A-135E-47DE-973D-CE0243D24F79}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AD90F897-FDBA-4CFD-8C24-F8EA3AB5A3D6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{AD90F897-FDBA-4CFD-8C24-F8EA3AB5A3D6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{061D95A8-E50B-4E5A-9103-A3437CEC18DE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{061D95A8-E50B-4E5A-9103-A3437CEC18DE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
