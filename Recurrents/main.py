@@ -22,6 +22,7 @@ text = open(path).read().lower()
 '''
 my change!!
 '''
+
 text=text.replace('é','')
 text=text.replace('ë','')
 text=text.replace('Æ','')
