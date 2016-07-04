@@ -6,7 +6,7 @@
     <ProjectGuid>ad90f897-fdba-4cfd-8c24-f8ea3ab5a3d6</ProjectGuid>
     <ProjectHome>
     </ProjectHome>
-    <StartupFile>Dart_Embedded.py</StartupFile>
+    <StartupFile>MNIST_CNN.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
