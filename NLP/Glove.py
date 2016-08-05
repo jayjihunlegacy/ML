@@ -10,7 +10,7 @@ from os import listdir
 from functools import reduce
 import theano.tensor as T
 import theano
-from multiprocessing import Process
+from multiprocessing import Process, Manager
 class NoWordException(Exception):
 	def __init__(self, word):
 		self.word = word
@@ -77,8 +77,7 @@ class GloVe(WordVectors):
 			vecs=_pickle.load(f)
 		for idx, vec in enumerate(vecs):
 			self.vec_cache[idx] = vec
-
-
+			
 	def word2vec(self, word):
 		# get index of that word.
 		id = self._word2id(word)
@@ -114,56 +113,68 @@ class GloVe(WordVectors):
 			return None
 		if exc is None:
 			exc=[]
-
 		# search n words, and find them.
 		n = k + len(exc)
-		onetime = GloVe.bucket_size # number of words calculated at once.
-		vec_rep = np.tile(vec,(onetime,1))
-		
-		
 
 		# 1. onmemory
 		if self.vectors is not None:
-			raise NotImplementedError()
+			onetime = 200 # number of words calculated at once.
+			
+			num_words = len(self.vocab)
+			tickle = (num_words % onetime != 0)
+			iters = num_words // onetime 
+			iters += 1 if tickle else 0
+			vec_rep = np.tile(vec, (onetime,1))
+
+			ds = []
+			idx = 0
+			if tickle:
+				for iter in range(iters-1):
+					d = np.linalg.norm(self.vectors[idx:idx+onetime] - vec_rep, axis=1).flatten()
+					idx+=onetime
+					ds.append(d)
+				d = np.linalg.norm(self.vectors[idx:] - np.tile(vec, (num_words - idx,1)), axis=1).flatten()
+				ds.append(d)
+			else:
+				for iter in range(iters):
+					d = np.linalg.norm(self.vectors[idx:idx+onetime] - vec_rep, axis=1).flatten()
+					idx+=onetime
+					ds.append(d)
+			ds = np.hstack(ds)
+			ids = np.argpartition(ds, n)[:n]
+			dists = ds[ids]
+
 		# 2. ondisk
 		# what to be accelerated by multiprocessing.
 		else:
 			bucket_num = len(listdir(GloVe.folder+'buckets/'))
-
-			parallel=True
-			if parallel:
-				buckets_per_proc = bucket_num//self.corenum
-				procs=[]
-				for proc_idx in range(self.corenum):
-					procs.append(Process(target=func, args=()))
-			else:
-				ds = []
-				for b_idx in range(bucket_num):
-					fname = 'glove.840B.300d['+str(b_idx)+'].pkl'
-					with open(GloVe.folder+'buckets/'+fname, 'rb') as f:
-						vecs=_pickle.load(f)
-					if b_idx == bucket_num-1:
-						vec_rep=np.tile(vec,(vecs.shape[0],1))
-					d = np.linalg.norm(vecs-vec_rep, axis=1).flatten()
-					ds.append(d)
+			onetime = GloVe.bucket_size # number of words calculated at once.
+			vec_rep = np.tile(vec,(onetime,1))
+			ds = []
+			for b_idx in range(bucket_num):
+				fname = 'glove.840B.300d['+str(b_idx)+'].pkl'
+				with open(GloVe.folder+'buckets/'+fname, 'rb') as f:
+					vecs=_pickle.load(f)
+				if b_idx == bucket_num-1:
+					vec_rep=np.tile(vec,(vecs.shape[0],1))
+				d = np.linalg.norm(vecs-vec_rep, axis=1).flatten()
+				ds.append(d)
 
 			ds = np.hstack(ds)
 			ids = np.argpartition(ds, n)[:n] # n many smallest IDs. not sorted order.
 			dists = ds[ids] # n many smallest distances. not sorted order.
 
-			# kick out exc members.
-			for i in range(n):
-				word = self._id2word(ids[i])
-				if word in exc:
-					ids[i]=-1
-			dists = dists[ids>=0]
-			ids = ids[ids>=0]
+		# kick out exc members.
+		for word in exc:
+			id = self._word2id(word)
+			ids[ids==id] = -1
+		dists = dists[ids>=0]
+		ids = ids[ids>=0]
 
-			order = np.argsort(dists)
-			dists = dists[order][:k]
-			words = [self._id2word(id) for id in ids[order][:k]]
-			
-			return words, dists
+		order = np.argsort(dists)
+		dists = dists[order][:k]
+		words = [self._id2word(id) for id in ids[order][:k]]
+		return words, dists
 
 	def get_vocab(self):
 		# if self.vocab is already set, return it.
@@ -183,14 +194,18 @@ class GloVe(WordVectors):
 			return None
 
 		# if can on memory,
-		vectors=[]
-		fname = 'glove.840B.300d.txt'
+		if self.vectors is not None:
+			return self.vectors
 
-		with open(GloVe.folder+fname, 'r', encoding='latin1') as f:
-			for line in f:
-				values=[float(str_value) for str_value in line[:-1].split(' ')[1:]]
-				vectors.append(np.array(values))
-		vectors = np.array(vectors, dtype=np.float32)
+		# read from pickle files.
+		vectors=[]
+		bucket_num = len(listdir(GloVe.folder+'buckets/'))
+		for b_idx in range(bucket_num):
+			fname = 'glove.840B.300d['+str(b_idx)+'].pkl'
+			with open(GloVe.folder+'buckets/'+fname, 'rb') as f:
+				vecs=_pickle.load(f)
+			vectors.append(vecs)
+		vectors = np.vstack(vectors)
 		self.vectors = vectors
 		return vectors
 
